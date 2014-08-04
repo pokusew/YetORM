@@ -1,13 +1,13 @@
 
 {
-	"name": "uestla/yetorm",
+	"name": "pokusew/yetorm",
 	"type": "library",
 	"description": "Lightweight ORM for Nette\\Database",
 	"keywords": ["nette", "orm", "database"],
-	"homepage": "https://github.com/uestla/YetORM",
+	"homepage": "https://github.com/pokusew/YetORM",
 	"license": "MIT",
 	"support": {
-		"issues": "https://github.com/uestla/YetORM/issues"
+		"issues": "https://github.com/pokusew/YetORM/issues"
 	},
 
 	"require": {
