@@ -16,7 +16,6 @@ use Aliaser\Container as Aliaser;
 use Nette\Database\Context as NdbContext;
 use Nette\Database\Table\Selection as NSelection;
 
-
 abstract class Repository extends Nette\Object
 {
 
@@ -32,17 +31,16 @@ abstract class Repository extends Nette\Object
 	/** @var string */
 	protected $entity = NULL;
 
-
 	/** @param  NdbContext $database */
 	function __construct(NdbContext $database)
 	{
 		$this->database = $database;
 
-		if (!isset(self::$transactionCounter[$dsn = $database->getConnection()->getDsn()])) {
+		if (!isset(self::$transactionCounter[$dsn = $database->getConnection()->getDsn()]))
+		{
 			self::$transactionCounter[$dsn] = 0;
 		}
 	}
-
 
 	/**
 	 * @param  NSelection $selection
@@ -56,7 +54,6 @@ abstract class Repository extends Nette\Object
 		return new EntityCollection($selection, $entity === NULL ? $this->getEntityClass() : $entity, $refTable, $refColumn);
 	}
 
-
 	/**
 	 * @param  string $table
 	 * @return NSelection
@@ -66,12 +63,13 @@ abstract class Repository extends Nette\Object
 		return $this->database->table($table === NULL ? $this->getTableName() : $table);
 	}
 
-
 	/** @return string */
 	final protected function getTableName()
 	{
-		if ($this->table === NULL) {
-			if (($annotation = static::getReflection()->getAnnotation('table')) === NULL) {
+		if ($this->table === NULL)
+		{
+			if (($annotation = static::getReflection()->getAnnotation('table')) === NULL)
+			{
 				throw new Exception\InvalidStateException("Table name not set.");
 			}
 
@@ -81,13 +79,14 @@ abstract class Repository extends Nette\Object
 		return $this->table;
 	}
 
-
 	/** @return string */
 	final protected function getEntityClass()
 	{
-		if ($this->entity === NULL) {
+		if ($this->entity === NULL)
+		{
 			$ref = static::getReflection();
-			if (($annotation = $ref->getAnnotation('entity')) === NULL) {
+			if (($annotation = $ref->getAnnotation('entity')) === NULL)
+			{
 				throw new Exception\InvalidStateException('Entity class not set.');
 			}
 
@@ -96,7 +95,6 @@ abstract class Repository extends Nette\Object
 
 		return $this->entity;
 	}
-
 
 	/**
 	 * @param  Entity $entity
@@ -107,75 +105,77 @@ abstract class Repository extends Nette\Object
 		$this->checkEntity($entity);
 
 		$me = $this;
-		return $this->transaction(function () use ($me, $entity) {
+		return $this->transaction(function () use ($me, $entity)
+				{
 
-			$record = $entity->toRecord();
-			if ($record->hasRow()) {
-				return $record->update();
-			}
+					$record = $entity->toRecord();
+					if ($record->hasRow())
+					{
+						return $record->update();
+					}
 
-			$inserted = $me->getTable()->insert($record->getModified());
-			$record->setRow($inserted);
-			return $inserted instanceof \Nette\Database\IRow || $inserted > 0;
-
-		});
+					$inserted = $me->getTable()->insert($record->getModified());
+					$record->setRow($inserted);
+					return $inserted instanceof \Nette\Database\IRow || $inserted > 0;
+				});
 	}
-
 
 	/**
 	 * @param  Entity $entity
-	 * @return bool
+	 * @return int
 	 */
 	function delete(Entity $entity)
 	{
 		$this->checkEntity($entity);
 		$record = $entity->toRecord();
 
-		if ($record->hasRow()) {
-			return $this->transaction(function () use ($record) {
-				return $record->getRow()->delete() > 0;
-			});
+		if ($record->hasRow())
+		{
+			return $this->transaction(function () use ($record)
+					{
+						return $record->getRow()->delete();
+					});
 		}
 
-		return TRUE;
+		return 1;
 	}
-
 
 	/** @return void */
 	private function checkEntity(Entity $entity)
 	{
 		$class = $this->getEntityClass();
 
-		if (!($entity instanceof $class)) {
+		if (!($entity instanceof $class))
+		{
 			throw new Exception\InvalidArgumentException("Instance of '$class' expected, '"
-				. get_class($entity) . "' given.");
+			. get_class($entity) . "' given.");
 		}
 	}
-
 
 	// === TRANSACTIONS ====================================================
 
 	/** @return void */
 	final protected function begin()
 	{
-		if (self::$transactionCounter[$this->database->getConnection()->getDsn()]++ === 0) {
+		if (self::$transactionCounter[$this->database->getConnection()->getDsn()] ++ === 0)
+		{
 			$this->database->beginTransaction();
 		}
 	}
 
-
 	/** @return void */
 	final protected function commit()
 	{
-		if (self::$transactionCounter[$dsn = $this->database->getConnection()->getDsn()] === 0) {
+		if (self::$transactionCounter[$dsn = $this->database->getConnection()->getDsn()] === 0)
+		{
 			throw new Exception\InvalidStateException('No transaction started.');
 		}
 
-		if (--self::$transactionCounter[$dsn] === 0) {
+		if (--self::$transactionCounter[$dsn] === 0)
+		{
 			$this->database->commit();
 		}
 	}
-
 
 	/** @return void */
 	final protected function rollback()
@@ -184,21 +184,21 @@ abstract class Repository extends Nette\Object
 		self::$transactionCounter[$this->database->getConnection()->getDsn()] = 0;
 	}
 
-
 	/**
 	 * @param  \Closure $callback
 	 * @return mixed
 	 */
 	final protected function transaction(\Closure $callback)
 	{
-		try {
+		try
+		{
 			$this->begin();
-				$return = $callback();
+			$return = $callback();
 			$this->commit();
 
 			return $return;
-
-		} catch (\Exception $e) {
+		} catch (\Exception $e)
+		{
 			$this->rollback();
 			throw $e;
 		}

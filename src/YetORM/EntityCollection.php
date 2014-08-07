@@ -11,11 +11,9 @@
 
 namespace YetORM;
 
-
 use Nette;
 use Nette\Utils\Callback as NCallback;
 use Nette\Database\Table\Selection as NSelection;
-
 
 class EntityCollection extends Nette\Object implements \Iterator, \Countable
 {
@@ -38,10 +36,8 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 	/** @var array */
 	private $keys;
 
-
 	const ASC = FALSE;
 	const DESC = TRUE;
-
 
 	/**
 	 * @param  NSelection $selection
@@ -55,45 +51,48 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		$this->refTable = $refTable;
 		$this->refColumn = $refColumn;
 
-		try {
+		try
+		{
 			NCallback::check($entity);
 			$this->entity = NCallback::closure($entity);
-
-		} catch (\Exception $e) {
+		} catch (\Exception $e)
+		{
 			$this->entity = $entity;
 		}
 	}
 
-
 	/** @return void */
 	private function loadData()
 	{
-		if ($this->data === NULL) {
-			if ($this->entity instanceof \Closure) {
+		if ($this->data === NULL)
+		{
+			if ($this->entity instanceof \Closure)
+			{
 				$factory = $this->entity;
-
-			} else {
+			}
+			else
+			{
 				$class = $this->entity;
-				$factory = function ($record) use ($class) {
+				$factory = function ($record) use ($class)
+				{
 					return new $class($record);
 				};
 			}
 
 			$this->data = array();
-			foreach ($this->selection as $row) {
+			foreach ($this->selection as $row)
+			{
 				$record = $this->refTable === NULL ? $row : $row->ref($this->refTable, $this->refColumn);
 				$this->data[] = NCallback::invoke($factory, $record);
 			}
 		}
 	}
 
-
 	/** @return array */
 	function toArray()
 	{
 		return iterator_to_array($this);
 	}
-
 
 	/**
 	 * API:
@@ -102,8 +101,8 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 	 * $this->orderBy('column', EntityCollection::DESC); // ORDER BY [column] DESC
 	 * // or
 	 * $this->orderBy(array(
-	 *	'first'  => EntityCollection::ASC,
-	 *	'second' => EntityCollection::DESC,
+	 * 	'first'  => EntityCollection::ASC,
+	 * 	'second' => EntityCollection::DESC,
 	 * ); // ORDER BY [first], [second] DESC
 	 * </code>
 	 *
@@ -113,12 +112,15 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 	 */
 	function orderBy($column, $dir = NULL)
 	{
-		if (is_array($column)) {
-			foreach ($column as $col => $d) {
+		if (is_array($column))
+		{
+			foreach ($column as $col => $d)
+			{
 				$this->orderBy($col, $d);
 			}
-
-		} else {
+		}
+		else
+		{
 			$dir === NULL && ($dir = static::ASC);
 			$this->selection->order($column . ($dir === static::DESC ? ' DESC' : ''));
 		}
@@ -126,7 +128,6 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		$this->invalidate();
 		return $this;
 	}
-
 
 	/**
 	 * @param  int $limit
@@ -140,13 +141,11 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		return $this;
 	}
 
-
 	/** @return void */
 	private function invalidate()
 	{
 		$this->data = NULL;
 	}
-
 
 	// === interface \Iterator ======================================
 
@@ -158,7 +157,6 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		reset($this->keys);
 	}
 
-
 	/** @return Entity */
 	function current()
 	{
@@ -166,13 +164,11 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		return $key === FALSE ? FALSE : $this->data[$key];
 	}
 
-
 	/** @return mixed */
 	function key()
 	{
 		return current($this->keys);
 	}
-
 
 	/** @return void */
 	function next()
@@ -180,20 +176,19 @@ class EntityCollection extends Nette\Object implements \Iterator, \Countable
 		next($this->keys);
 	}
 
-
 	/** @return bool */
 	function valid()
 	{
 		return current($this->keys) !== FALSE;
 	}
 
-
 	// === interface \Countable ======================================
 
 	/** @return int */
 	function count()
 	{
-		if ($this->data !== NULL) {
+		if ($this->data !== NULL)
+		{
 			return count($this->data);
 		}
 

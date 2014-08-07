@@ -12,7 +12,6 @@
 namespace YetORM;
 
 use Nette;
-use Nette\Utils\Callback as NCallback;
 use Nette\Database\Table\ActiveRow as NActiveRow;
 
 abstract class Entity
@@ -39,23 +38,10 @@ abstract class Entity
 	/**
 	 * @param  string $name
 	 * @param  array $args
-	 * @return void
+	 * @return mixed
 	 */
 	function __call($name, $args)
 	{
-		// events support
-		$ref = static::getReflection();
-		if (preg_match('#^on[A-Z]#', $name) && $ref->hasProperty($name)) {
-			$prop = $ref->getProperty($name);
-			if ($prop->isPublic() && !$prop->isStatic() && (is_array($this->$name) || $this->$name instanceof \Traversable)) {
-				foreach ($this->$name as $cb) {
-					NCallback::invokeArgs($cb, $args);
-				}
-
-				return ;
-			}
-		}
-
 		$class = get_class($this);
 		throw new Exception\MemberAccessException("Call to undefined method $class::$name().");
 	}
@@ -67,16 +53,33 @@ abstract class Entity
 	function & __get($name)
 	{
 		$prop = static::getReflection()->getEntityProperty($name);
-		
+
 		if ($prop instanceof Reflection\AnnotationProperty)
 		{
-			$value = $prop->setType($this->record->{$prop->column});
+			if (!$prop->isOfNativeType() && is_subclass_of($prop->type, '\YetORM\Entity'))
+			{
+				$class = $prop->type;
+
+				if (!$prop->isNullable() && $this->record->{$prop->column} === NULL)
+				{
+					throw new Exception\InvalidStateException('Coloumn \'' . $prop->column . '\' cannot be NULL. Incorrect defintion.');
+				}
+				else
+				{
+					$value = $this->record->{$prop->column} === NULL ? NULL : new $class($this->record->{$prop->column}->getRow());
+				}
+			}
+			else
+			{
+				$value = $prop->setType($this->record->{$prop->column});
+			}
+
 			return $value;
 		}
-		
+
 		if ($prop instanceof Reflection\MethodProperty)
 		{
-			$value = $this->{'get' . ucfirst($prop->name)}();
+			$value = $this->{$prop->getterName}();
 			return $value;
 		}
 
@@ -92,18 +95,26 @@ abstract class Entity
 	function __set($name, $value)
 	{
 		$prop = static::getReflection()->getEntityProperty($name);
-		
+
 		if ($prop instanceof Reflection\AnnotationProperty && !$prop->readonly)
 		{
-			$prop->checkType($value);
-			$this->record->{$prop->column} = $value;
+			if (!$prop->isOfNativeType() && is_subclass_of($prop->type, '\YetORM\Entity'))
+			{
+				$this->record->{$prop->column . '_id'} = $value;
+			}
+			else
+			{
+				$prop->checkType($value);
+				$this->record->{$prop->column} = $value;
+			}
+
 			return;
 		}
-		
+
 		if ($prop instanceof Reflection\MethodProperty && !$prop->readonly)
 		{
 			$prop->checkType($value);
-			$this->{'set' . ucfirst($prop->name)}();
+			$this->{$prop->setterName}();
 			return;
 		}
 
@@ -118,7 +129,7 @@ abstract class Entity
 	function __isset($name)
 	{
 		$prop = static::getReflection()->getEntityProperty($name);
-		
+
 		if ($prop instanceof Reflection\AnnotationProperty || $prop instanceof Reflection\MethodProperty)
 		{
 			return $this->__get($name) !== NULL;

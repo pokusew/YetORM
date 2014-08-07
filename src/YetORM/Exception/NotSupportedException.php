@@ -11,6 +11,7 @@
 
 namespace YetORM\Exception;
 
-
 class NotSupportedException extends \LogicException
-{}
+{
+	
+}

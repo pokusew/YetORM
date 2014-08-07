@@ -13,7 +13,6 @@ namespace YetORM\Reflection;
 
 use Nette;
 
-
 /** @property-read bool $readonly */
 abstract class EntityProperty extends Nette\Object
 {
@@ -30,7 +29,6 @@ abstract class EntityProperty extends Nette\Object
 	/** @var string */
 	private $type;
 
-
 	/**
 	 * @param  EntityType $reflection
 	 * @param  string $name
@@ -45,13 +43,11 @@ abstract class EntityProperty extends Nette\Object
 		$this->type = (string) $type;
 	}
 
-
 	/** @return EntityType */
 	function getEntityReflectioin()
 	{
 		return $this->reflection;
 	}
-
 
 	/** @return string */
 	function getName()
@@ -59,13 +55,11 @@ abstract class EntityProperty extends Nette\Object
 		return $this->name;
 	}
 
-
 	/** @return bool */
 	function isReadonly()
 	{
 		return $this->readonly;
 	}
-
 
 	/** @return string */
 	function getType()
@@ -73,13 +67,11 @@ abstract class EntityProperty extends Nette\Object
 		return $this->type;
 	}
 
-
 	/** @return bool */
 	function isOfNativeType()
 	{
 		return self::isNativeType($this->type);
 	}
-
 
 	/**
 	 * @param  string $type
@@ -87,8 +79,7 @@ abstract class EntityProperty extends Nette\Object
 	 */
 	static function isNativeType($type)
 	{
-		return $type !== NULL && ($type === 'integer' || $type === 'float' || $type === 'double'
-				|| $type === 'boolean' ||  $type === 'string' || $type === 'array');
+		return $type !== NULL && ($type === 'integer' || $type === 'float' || $type === 'double' || $type === 'boolean' || $type === 'string' || $type === 'array');
 	}
 
 }

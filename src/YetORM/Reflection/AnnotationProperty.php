@@ -13,7 +13,6 @@ namespace YetORM\Reflection;
 
 use YetORM;
 
-
 class AnnotationProperty extends EntityProperty
 {
 
@@ -22,7 +21,6 @@ class AnnotationProperty extends EntityProperty
 
 	/** @var bool */
 	private $nullable;
-
 
 	/**
 	 * @param  EntityType $reflection
@@ -40,13 +38,16 @@ class AnnotationProperty extends EntityProperty
 		$this->nullable = (bool) $nullable;
 	}
 
-
 	/** @return string */
 	function getColumn()
 	{
 		return $this->column;
 	}
 
+	function isNullable()
+	{
+		return $this->nullable;
+	}
 
 	/**
 	 * @param  mixed $value
@@ -55,29 +56,34 @@ class AnnotationProperty extends EntityProperty
 	 */
 	function checkType($value, $need = TRUE)
 	{
-		if ($value === NULL) {
-			if (!$this->nullable) {
+		if ($value === NULL)
+		{
+			if (!$this->nullable)
+			{
 				$entity = $this->getEntityReflectioin()->getName();
 				throw new YetORM\Exception\InvalidArgumentException("Property '{$entity}::\${$this->getName()}' cannot be NULL.");
 			}
-
-		} elseif (!$this->isOfNativeType()) {
+		}
+		elseif (!$this->isOfNativeType())
+		{
 			$class = $this->getType();
-			if (!($value instanceof $class)) {
+			if (!($value instanceof $class))
+			{
 				throw new YetORM\Exception\InvalidArgumentException("Instance of '{$class}' expected, '"
-						. get_class($value) . "' given.");
+				. get_class($value) . "' given.");
 			}
-
-		} elseif ($need && ($type = gettype($value)) !== $this->getType()) {
+		}
+		elseif ($need && ($type = gettype($value)) !== $this->getType())
+		{
 			throw new YetORM\Exception\InvalidArgumentException("Invalid type - '{$this->getType()}' expected, '$type' given.");
-
-		} else {
+		}
+		else
+		{
 			return FALSE;
 		}
 
 		return TRUE;
 	}
-
 
 	/**
 	 * @param  mixed $value
@@ -85,9 +91,10 @@ class AnnotationProperty extends EntityProperty
 	 */
 	function setType($value)
 	{
-		if (!$this->checkType($value, FALSE) && @settype($value, $this->getType()) === FALSE) { // intentionally @
+		if (!$this->checkType($value, FALSE) && @settype($value, $this->getType()) === FALSE)
+		{ // intentionally @
 			throw new YetORM\Exception\InvalidArgumentException("Unable to set type '{$this->getType()}' from '"
-				. gettype($value) . "'.");
+			. gettype($value) . "'.");
 		}
 
 		return $value;
